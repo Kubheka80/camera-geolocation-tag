@@ -5,6 +5,10 @@ import { Camera } from 'expo-camera';
 import { shareAsync } from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 
+let apiKey = 'YOUR_API_KEY';
+
+import * as Location from 'expo-location';
+
 export default function App() {
   let cameraRef = useRef();
   const [hasCameraPermission, setHasCameraPermission] = useState();
@@ -31,7 +35,33 @@ export default function App() {
       quality: 1,
       base64: true,
       exif: false
-    };
+    }
+    let { status } = await Location.requestBackgroundPermissionsAsync();
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+      }
+
+      Location.setGoogleApiKey(apiKey);
+
+      console.log(status);
+
+      let { coords } = await Location.getCurrentPositionAsync();
+
+      setLocation(coords);
+
+      console.log(coords);
+
+      if (coords) {
+        let { longitude, latitude } = coords;
+
+        let regionName = await Location.reverseGeocodeAsync({
+          longitude,
+          latitude,
+        });
+        setAddress(regionName[0]);
+        console.log(regionName, 'nothing');
+      }
+;
 
     let newPhoto = await cameraRef.current.takePictureAsync(options);
     setPhoto(newPhoto);
