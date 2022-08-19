@@ -14,7 +14,10 @@ export default function App() {
   const [hasCameraPermission, setHasCameraPermission] = useState();
   const [hasMediaLibraryPermission, setHasMediaLibraryPermission] = useState();
   const [photo, setPhoto] = useState();
-
+  const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
+  const [address, setAddress] = useState(null);
+  
   useEffect(() => {
     (async () => {
       const cameraPermission = await Camera.requestCameraPermissionsAsync();
@@ -36,7 +39,10 @@ export default function App() {
       base64: true,
       exif: false
     }
-    let { status } = await Location.requestBackgroundPermissionsAsync();
+    let newPhoto = await cameraRef.current.takePictureAsync(options);
+    setPhoto(newPhoto);
+
+    let { status } = await Location.requestPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
       }
@@ -63,8 +69,7 @@ export default function App() {
       }
 ;
 
-    let newPhoto = await cameraRef.current.takePictureAsync(options);
-    setPhoto(newPhoto);
+   
   };
 
   if (photo) {
@@ -83,6 +88,11 @@ export default function App() {
     return (
       <SafeAreaView style={styles.container}>
         <Image style={styles.preview} source={{ uri: "data:image/jpg;base64," + photo.base64 }} />
+        <Text style={styles.big}>
+        {!location
+          ? 'Waiting'
+          : `${JSON.stringify(address?.['subregion'])} ${JSON.stringify(address?.['district'])}`}
+      </Text>
         <Button title="Share" onPress={sharePic} />
         {hasMediaLibraryPermission ? <Button title="Save" onPress={savePhoto} /> : undefined}
         <Button title="Discard" onPress={() => setPhoto(undefined)} />
@@ -113,5 +123,5 @@ const styles = StyleSheet.create({
   preview: {
     alignSelf: 'stretch',
     flex: 1
-  }
+  },
 });
